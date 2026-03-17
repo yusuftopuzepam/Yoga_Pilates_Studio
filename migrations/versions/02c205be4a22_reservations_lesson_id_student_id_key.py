@@ -24,17 +24,21 @@ def upgrade() -> None:
         "reservations_lesson_id_student_id_key", "reservations", type_="unique"
     )
 
-    op.execute("""
+    op.execute(
+        """
                    CREATE UNIQUE INDEX ux_active_reservation_student_lesson
                        ON reservations (student_id, lesson_id) WHERE is_active = true;
-                   """)
+                   """
+    )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.execute("""
+    op.execute(
+        """
         DROP INDEX ux_active_reservation_student_lesson;
-    """)
+    """
+    )
 
     op.create_unique_constraint(
         "reservations_lesson_id_student_id_key",
