@@ -14,27 +14,42 @@ router = APIRouter(prefix="/lessons", tags=["Lessons"])
 def create_lesson(
     lesson_in: LessonCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_roles([UserRole.admin, UserRole.teacher]))
+    current_user=Depends(require_roles([UserRole.admin, UserRole.teacher])),
 ):
     # If current user is a teacher, they can only create lessons for themselves
-    if current_user.role == UserRole.teacher and current_user.id != lesson_in.teacher_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Teachers can only create their own lessons")
+    if (
+        current_user.role == UserRole.teacher
+        and current_user.id != lesson_in.teacher_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Teachers can only create their own lessons",
+        )
 
     # Validate room exists
     room = db.query(StudioRoom).filter(StudioRoom.id == lesson_in.room_id).first()
     if not room:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Room not found"
+        )
 
     # Validate teacher exists and has a teacher profile
     teacher = db.query(User).filter(User.id == lesson_in.teacher_id).first()
     if not teacher:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Teacher user not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Teacher user not found"
+        )
     if teacher.role != UserRole.teacher:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is not a teacher")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User is not a teacher"
+        )
 
     # Validate time range
     if lesson_in.end_time <= lesson_in.start_time:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="end_time must be after start_time")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="end_time must be after start_time",
+        )
 
     # Check for overlapping lessons for same room or same teacher
     overlap_filter = and_(
@@ -42,13 +57,23 @@ def create_lesson(
         Lesson.end_time > lesson_in.start_time,
     )
 
-    conflict = db.query(Lesson).filter(
-        overlap_filter,
-        or_(Lesson.room_id == lesson_in.room_id, Lesson.teacher_id == lesson_in.teacher_id)
-    ).first()
+    conflict = (
+        db.query(Lesson)
+        .filter(
+            overlap_filter,
+            or_(
+                Lesson.room_id == lesson_in.room_id,
+                Lesson.teacher_id == lesson_in.teacher_id,
+            ),
+        )
+        .first()
+    )
 
     if conflict:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Lesson conflicts with existing lesson for the same room or teacher")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Lesson conflicts with existing lesson for the same room or teacher",
+        )
 
     lesson = Lesson(
         lesson_type=lesson_in.lesson_type,

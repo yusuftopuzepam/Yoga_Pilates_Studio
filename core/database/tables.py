@@ -1,14 +1,26 @@
-from sqlalchemy import Column, Integer, String, Enum, ForeignKey, DateTime, UniqueConstraint, Boolean, func
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Enum,
+    ForeignKey,
+    DateTime,
+    UniqueConstraint,
+    Boolean,
+    func,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import enum
 
 Base = declarative_base()
 
+
 class UserRole(enum.Enum):
     admin = "admin"
     teacher = "teacher"
     student = "student"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -18,11 +30,15 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.student)
 
-    teacher_profile = relationship("TeacherProfile", back_populates="user", uselist=False)
+    teacher_profile = relationship(
+        "TeacherProfile", back_populates="user", uselist=False
+    )
+
 
 class RoomType(enum.Enum):
     YOGA = "yoga"
     PILATES = "pilates"
+
 
 class StudioRoom(Base):
     __tablename__ = "studio_rooms"
@@ -31,10 +47,12 @@ class StudioRoom(Base):
     capacity = Column(Integer, nullable=False)
     room_type = Column(Enum(RoomType), nullable=False)
 
+
 class Specialty(enum.Enum):
     yoga = "yoga"
     pilates = "pilates"
     both = "both"
+
 
 class TeacherProfile(Base):
     __tablename__ = "teacher_profiles"
@@ -44,9 +62,11 @@ class TeacherProfile(Base):
 
     user = relationship("User", back_populates="teacher_profile")
 
+
 class LessonType(enum.Enum):
     private = "private"
     group = "group"
+
 
 class StudentCredit(Base):
     __tablename__ = "student_credits"
@@ -55,9 +75,11 @@ class StudentCredit(Base):
     lesson_type = Column(Enum(LessonType), nullable=False)
     remaining_count = Column(Integer, nullable=False, default=0)
 
+
 class LessonCategory(enum.Enum):
     yoga = "yoga"
     pilates = "pilates"
+
 
 class Lesson(Base):
     __tablename__ = "lessons"
@@ -74,6 +96,7 @@ class Lesson(Base):
     room = relationship("StudioRoom")
     reservations = relationship("Reservation", back_populates="lesson")
 
+
 class Reservation(Base):
     __tablename__ = "reservations"
 
@@ -85,11 +108,7 @@ class Reservation(Base):
 
     is_active = Column(Boolean, nullable=False, default=True)
 
-    created_at = Column(
-        DateTime,
-        server_default=func.now(),
-        nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     lesson = relationship("Lesson", back_populates="reservations")
-

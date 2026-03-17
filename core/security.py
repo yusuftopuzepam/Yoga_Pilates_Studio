@@ -29,7 +29,7 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (
-            expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -37,11 +37,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 
 def decode_access_token(token: str) -> dict:
     try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
         raise HTTPException(
@@ -52,8 +48,8 @@ def decode_access_token(token: str) -> dict:
 
 
 def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Security(security),
-        db: Session = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Security(security),
+    db: Session = Depends(get_db),
 ) -> User:
     token = credentials.credentials
 
@@ -63,26 +59,25 @@ def get_current_user(
 
     if user_id is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token geçersiz"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token geçersiz"
         )
 
     user = db.query(User).filter(User.id == int(user_id)).first()
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Kullanıcı bulunamadı"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Kullanıcı bulunamadı"
         )
 
     return user
+
 
 def require_roles(allowed_roles: List[UserRole]):
     def role_checker(current_user: User = Depends(get_current_user)):
         if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bu işlemi gerçekleştirmek için izniniz yok"
+                detail="Bu işlemi gerçekleştirmek için izniniz yok",
             )
         return current_user
 

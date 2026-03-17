@@ -22,5 +22,6 @@ def create_admin():
     db.close()
     print("Admin olusturuldu")
 
+
 if __name__ == "__main__":
     create_admin()

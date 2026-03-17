@@ -5,13 +5,15 @@ from sqlalchemy.orm import Session
 
 from core.database.db_connection import get_db
 from core.database.tables import User, UserRole
-from core.security import verify_password, create_access_token, get_current_user, get_password_hash
+from core.security import (
+    verify_password,
+    create_access_token,
+    get_current_user,
+    get_password_hash,
+)
 from pydantic_models.auth_model import TokenResponse, LoginRequest, UserCreate
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["Authentication"]
-)
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register")
@@ -36,24 +38,18 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(login_data: LoginRequest,
-          db: Session = Depends(get_db)
-          ):
-    user = (db.query(User).filter(
-        User.email == login_data.email)
-            .first())
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == login_data.email).first()
 
-    if not user or not verify_password(
-            login_data.password,
-            user.password_hash
-    ):
-        raise HTTPException(
-            status_code=401, detail="Kullanici adi veya sifre hatali")
+    if not user or not verify_password(login_data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Kullanici adi veya sifre hatali")
 
-    access_token = create_access_token(data={
-        "sub": str(user.id),
-        "role": user.role.value,
-    })
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "role": user.role.value,
+        }
+    )
     return TokenResponse(access_token=access_token)
 
 
@@ -63,5 +59,5 @@ def read_current_user(current_user: User = Depends(get_current_user)):
         "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
-        "role": current_user.role.value
+        "role": current_user.role.value,
     }

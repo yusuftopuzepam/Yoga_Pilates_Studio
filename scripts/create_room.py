@@ -20,5 +20,6 @@ def create_room():
     db.close()
     print("Studio odaları oluşturuldu.")
 
+
 if __name__ == "__main__":
     create_room()

@@ -11,10 +11,10 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 
 @router.patch("users/{user_id}/role")
 def update_user_role(
-        user_id: int,
-        new_role: UserRole,
-        db: Session = Depends(get_db),
-        current_user=Depends(require_roles([UserRole.admin]))
+    user_id: int,
+    new_role: UserRole,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_roles([UserRole.admin])),
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
